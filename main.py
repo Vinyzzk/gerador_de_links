@@ -25,7 +25,6 @@ def clear_folder(folder):
         print(f"[!] Pasta \"{folder}\" resetada")
 
 
-# Função para criar pastas padrão
 def check_default_folders():
     error_empty_folder = 0
     default_folders = ["images", "converted"]
@@ -50,6 +49,7 @@ def check_default_folders():
             quit()
 
 
+# Destroi o arquivo "desktop.ini"
 def check_desktop_ini():
     folder = "images"
     for file in os.listdir(folder):
@@ -69,17 +69,14 @@ def check_desktop_ini():
                 print("[!] Um arquivo .ini destruído com sucesso")
 
 
-# Faz a checagem do token api imgbb
 def check_token():
     global token
 
-    # Carrega o token do ImgBB a partir do arquivo config.json
     with open("configs/config.json", "r") as file:
         data = json.load(file)
     token = data.get("token")
 
     # TODO: adicionar uma verificacao se o token é valido ou nao, e pedir para inserir novamente
-
     if not data["token"]:
         data["token"] = str(input("Adicione seu token do ImgBB: "))
         print(f"[+] Token adicionado")
@@ -90,7 +87,6 @@ def check_token():
         quit()
 
 
-# Função para converter imagens
 def convert_images():
     print(f"[+] Convertendo imagens")
     for filename in tqdm(os.listdir("images")):
@@ -119,7 +115,6 @@ def convert_images():
                 img.save(f"converted/default/{name}.png")
 
 
-# Função para fazer o upload das imagens
 def upload_images():
     print(f"[+] Upando imagens")
     for folder in tqdm(os.listdir("converted")):
@@ -160,7 +155,6 @@ def upload_images():
     line()
 
 
-# TODO: Preciso fazer essa funçao listar em uma planilha todos os links com SKU
 def generate_excel():
     data = []
     for folder in os.listdir("converted"):
@@ -179,7 +173,6 @@ def line():
     print("------------------------------------------")
 
 
-# Verifica se o arquivo está sendo executado diretamente
 if __name__ == "__main__":
     # Basic checks
     check_token()
