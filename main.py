@@ -5,7 +5,8 @@ from PIL import Image
 import requests
 import base64
 import json
-import csv
+import openpyxl
+import pandas as pd
 
 
 def clear_folder(folder):
@@ -161,19 +162,16 @@ def upload_images():
 
 # TODO: Preciso fazer essa funçao listar em uma planilha todos os links com SKU
 def generate_excel():
-    links = []
+    data = []
     for folder in os.listdir("converted"):
         for file in os.listdir(f"converted/{folder}"):
-            if file == "url_bling_excel.txt":
+            if file == "url_bling.txt":
                 with open(f"converted/{folder}/{file}", "r") as txt:
                     for item in txt:
-                        links.append(item)
+                        data.append({'SKU': folder, 'Links': item})
 
-    with open("converted.csv", "w", newline="", encoding='utf-8-sig') as excel:
-        writer = csv.writer(excel)
-        writer.writerow(["SKU$LINKS"])
-        for item in links:
-            writer.writerow([item])
+    df = pd.DataFrame(data)
+    df.to_excel("result.xlsx", index=False, engine="openpyxl")
 
 
 # Função auxiliar para imprimir uma linha separadora
@@ -197,7 +195,7 @@ if __name__ == "__main__":
     upload_images()
     clear_folder("images")
 
-    # generate_excel()
+    generate_excel()
 
     input(f"Pressione ENTER para sair")
 
