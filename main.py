@@ -1,72 +1,19 @@
-import os
-import shutil
-from tqdm import tqdm  # progress bar
+import tkinter as tk
+from tkinterdnd2 import DND_FILES, TkinterDnD
 from PIL import Image
+import os
+from pathlib import Path
 import requests
 import base64
+import shutil
 import json
-import openpyxl
-import pandas as pd
 
 
-def clear_folder(folder):
-    helper = 0
-    for file in os.listdir(folder):
-        file_path = os.path.join(folder, file)
-        if os.path.isdir(file_path):
-            shutil.rmtree(file_path)
-            print(f"[!] Pasta \"{folder}\" resetada")
-
-        if os.path.isfile(file_path):
-            os.remove(file_path)
-            helper += 1
-
-    if helper >= 1:
-        print(f"[!] Pasta \"{folder}\" resetada")
-
-
-def check_default_folders():
-    error_empty_folder = 0
-    default_folders = ["images", "converted"]
-    folders_created = 0
-    for folder in default_folders:
-        try:
-            os.mkdir(f"{folder}")
-            print(f"[+] Pasta {folder} criada")
-            folders_created += 1
-        except FileExistsError:
-            error_empty_folder = 1
-            continue
-
-    if folders_created > 0:
-        quit()
-
-    if error_empty_folder == 1:
-        files = os.listdir("images")
-        if len(files) == 0:
-            print(f'[!] É preciso adicionar imagens em "images"')
-            input(f"Pressione ENTER para sair")
-            quit()
-
-
-# Destroi o arquivo "desktop.ini"
-def check_desktop_ini():
-    folder = "images"
-    for file in os.listdir(folder):
-        path = os.path.abspath(os.path.join(folder, file))
-        if os.path.isdir(path):
-            for image in os.listdir(path):
-                name, ext = os.path.splitext(image)
-                if ext == ".ini":
-                    file_path = os.path.abspath(os.path.join(path, image))
-                    os.remove(file_path)
-                    print("[!] Um arquivo .ini destruído com sucesso")
-        if os.path.isfile(path):
-            name, ext = os.path.splitext(file)
-            if ext == ".ini":
-                file_path = os.path.abspath(os.path.join(folder, file))
-                os.remove(file_path)
-                print("[!] Um arquivo .ini destruído com sucesso")
+def handle_drop(event):
+    global files
+    files = event.widget.tk.splitlist(event.data)
+    convert_images()
+    upload_images()
 
 
 def check_token():
@@ -88,36 +35,41 @@ def check_token():
 
 
 def convert_images():
-    print(f"[+] Convertendo imagens")
-    for filename in tqdm(os.listdir("images")):
-        file_path = os.path.join("images", filename)
-        if os.path.isdir(file_path):
+    for filename in files:
+        file_abs_path = filename
+        filename = filename[3:]
+        
+        if os.path.isdir(file_abs_path):
             os.mkdir(path=f"converted/{filename}")
-            for file in os.listdir(f"images/{filename}"):
+            for file in os.listdir(file_abs_path):
+                
                 name, ext = os.path.splitext(file)
+                print(name, ext)
+                
                 if ext != ".png":
-                    img = Image.open(f"images/{filename}/{file}").convert("RGB")
+                    img = Image.open(f"{file_abs_path}/{file}").convert("RGB")
                     img.save(f"converted/{filename}/{name}.jpeg")
                 else:
-                    img = Image.open(f"images/{filename}/{file}").convert("RGBA")
+                    img = Image.open(f"{file_abs_path}/{file}").convert("RGBA")
                     img.save(f"converted/{filename}/{name}.png")
-        else:
+        
+        if os.path.isfile(file_abs_path):
+            filename = os.path.basename(filename)
             name, ext = os.path.splitext(filename)
             if ext != ".png":
                 if not os.path.exists("converted/default"):
                     os.mkdir(path=f"converted/default")
-                img = Image.open(f"images/{filename}").convert("RGB")
+                img = Image.open(file_abs_path).convert("RGB")
                 img.save(f"converted/default/{name}.jpeg")
             else:
                 if not os.path.exists("converted/default"):
                     os.mkdir(path=f"converted/default")
-                img = Image.open(f"images/{filename}").convert("RGBA")
+                img = Image.open(file_abs_path).convert("RGBA")
                 img.save(f"converted/default/{name}.png")
 
 
 def upload_images():
-    print(f"[+] Upando imagens")
-    for folder in tqdm(os.listdir("converted")):
+    for folder in os.listdir("converted"):
         links = []
         links_bling = []
         links_bling_com_sku = [f"{folder}"]
@@ -152,44 +104,61 @@ def upload_images():
         with open(f"converted/{folder}/url_bling.txt", "w+") as txt2:
             txt2.writelines(links_bling)
 
-    line()
+
+def clear_folder(folder):
+    helper = 0
+    for file in os.listdir(folder):
+        file_path = os.path.join(folder, file)
+        if os.path.isdir(file_path):
+            shutil.rmtree(file_path)
+            print(f"[!] Pasta \"{folder}\" resetada")
+
+        if os.path.isfile(file_path):
+            os.remove(file_path)
+            helper += 1
+
+    if helper >= 1:
+        print(f"[!] Pasta \"{folder}\" resetada")
 
 
-def generate_excel():
-    data = []
-    for folder in os.listdir("converted"):
-        for file in os.listdir(f"converted/{folder}"):
-            if file == "url_bling.txt":
-                with open(f"converted/{folder}/{file}", "r") as txt:
-                    for item in txt:
-                        data.append({'SKU': folder, 'Links': item})
-
-    df = pd.DataFrame(data)
-    df.to_excel("result.xlsx", index=False, engine="openpyxl")
-
-
-# Função auxiliar para imprimir uma linha separadora
-def line():
-    print("------------------------------------------")
-
-
-if __name__ == "__main__":
-    # Basic checks
-    check_token()
-    check_default_folders()
-    check_desktop_ini()
-
-    clear_folder("converted")
-
-    line()
-
-    convert_images()
-
-    upload_images()
-    clear_folder("images")
-
-    generate_excel()
-
-    input(f"Pressione ENTER para sair")
+def check_desktop_ini():
+    folder = "images"
+    for file in os.listdir(folder):
+        path = os.path.abspath(os.path.join(folder, file))
+        if os.path.isdir(path):
+            for image in os.listdir(path):
+                name, ext = os.path.splitext(image)
+                if ext == ".ini":
+                    file_path = os.path.abspath(os.path.join(path, image))
+                    os.remove(file_path)
+                    print("[!] Um arquivo .ini destruído com sucesso")
+        if os.path.isfile(path):
+            name, ext = os.path.splitext(file)
+            if ext == ".ini":
+                file_path = os.path.abspath(os.path.join(folder, file))
+                os.remove(file_path)
+                print("[!] Um arquivo .ini destruído com sucesso")
 
 
+# Configuração da janela principal
+janela = TkinterDnD.Tk()
+janela.title("Gerador de Links")
+
+# Defina as dimensões da janela para 400x300 pixels
+janela.geometry("400x300")
+
+# Cria um rótulo na janela
+label = tk.Label(janela, text="Arraste e solte os arquivos na interface", height=200, font="Helvetica")
+label.pack()
+
+# Cria um rótulo para exibir o nome do arquivo
+label_arquivo = tk.Label(janela, text="")
+label_arquivo.pack()
+
+# Adicione a funcionalidade de arrastar e soltar
+janela.drop_target_register(DND_FILES)
+janela.dnd_bind('<<Drop>>', handle_drop)
+
+# Inicia o loop principal da interface gráfica
+check_token()
+janela.mainloop()
