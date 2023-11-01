@@ -1,4 +1,6 @@
 import tkinter as tk
+from time import sleep
+import json
 from tkinterdnd2 import DND_FILES, TkinterDnD
 from PIL import Image
 import os
@@ -7,14 +9,6 @@ import requests
 import base64
 import shutil
 import json
-
-
-def handle_drop(event):
-    global files
-    files = event.widget.tk.splitlist(event.data)
-    convert_images()
-    upload_images()
-
 
 def check_token():
     global token
@@ -25,13 +19,70 @@ def check_token():
 
     # TODO: adicionar uma verificacao se o token é valido ou nao, e pedir para inserir novamente
     if not data["token"]:
-        data["token"] = str(input("Adicione seu token do ImgBB: "))
-        print(f"[+] Token adicionado")
+        # Função chamada quando o botão é pressionado
+        def exibir_texto():
+            token_var = campo_texto.get()
+            rotulo.config(text=f"Token adicionado!")
+            sleep(2)
+            data["token"] = token_var
 
-        with open("configs/config.json", "w") as file:
-            json.dump(data, file)
-        input(f"Pressione ENTER para sair")
-        quit()
+            with open("configs/config.json", "w") as file:
+                json.dump(data, file)
+            quit()
+
+        # Cria uma instância da janela
+        check = tk.Tk()
+
+        # Define o título da janela
+        check.title("Minha Aplicação Tkinter")
+
+        # Define as dimensões da janela (largura x altura)
+        check.geometry("400x300")
+
+        # Cria um rótulo na janela
+        rotulo = tk.Label(check, text="Adicione seu token do ImgBB:")
+        rotulo.pack()
+
+        # Cria um campo de entrada na janela
+        campo_texto = tk.Entry(check)
+        campo_texto.pack()
+
+        # Cria um botão na janela
+        botao = tk.Button(check, text="Exibir", command=exibir_texto)
+        botao.pack()
+
+        # Inicia o loop principal da interface gráfica
+        check.mainloop()
+       
+    else:
+        # Configuração da janela principal
+        janela = TkinterDnD.Tk()
+        janela.title("Gerador de Links")
+
+        # Defina as dimensões da janela para 400x300 pixels
+        janela.geometry("400x300")
+
+        # Cria um rótulo na janela
+        label = tk.Label(janela, text="Arraste e solte os arquivos na interface", height=200, font="Helvetica")
+        label.pack()
+
+        # Cria um rótulo para exibir o nome do arquivo
+        label_arquivo = tk.Label(janela, text="")
+        label_arquivo.pack()
+
+        # Adicione a funcionalidade de arrastar e soltar
+        janela.drop_target_register(DND_FILES)
+        janela.dnd_bind('<<Drop>>', handle_drop)
+
+        # Inicia o loop principal da interface gráfica
+        janela.mainloop()
+        
+        
+def handle_drop(event):
+    global files
+    files = event.widget.tk.splitlist(event.data)
+    convert_images()
+    upload_images()
 
 
 def convert_images():
@@ -140,25 +191,6 @@ def check_desktop_ini():
                 print("[!] Um arquivo .ini destruído com sucesso")
 
 
-# Configuração da janela principal
-janela = TkinterDnD.Tk()
-janela.title("Gerador de Links")
-
-# Defina as dimensões da janela para 400x300 pixels
-janela.geometry("400x300")
-
-# Cria um rótulo na janela
-label = tk.Label(janela, text="Arraste e solte os arquivos na interface", height=200, font="Helvetica")
-label.pack()
-
-# Cria um rótulo para exibir o nome do arquivo
-label_arquivo = tk.Label(janela, text="")
-label_arquivo.pack()
-
-# Adicione a funcionalidade de arrastar e soltar
-janela.drop_target_register(DND_FILES)
-janela.dnd_bind('<<Drop>>', handle_drop)
-
-# Inicia o loop principal da interface gráfica
 check_token()
-janela.mainloop()
+
+
