@@ -2,7 +2,7 @@ import tkinter as tk
 from time import sleep
 import json
 from tkinterdnd2 import DND_FILES, TkinterDnD
-from PIL import Image
+from PIL import Image, ImageTk
 import os
 from pathlib import Path
 import requests
@@ -19,8 +19,7 @@ def check_token():
 
     # TODO: adicionar uma verificacao se o token é valido ou nao, e pedir para inserir novamente
     if not data["token"]:
-        # Função chamada quando o botão é pressionado
-        def exibir_texto():
+        def adicionar_token():
             token_var = campo_texto.get()
             rotulo.config(text=f"Token adicionado!")
             sleep(2)
@@ -30,51 +29,47 @@ def check_token():
                 json.dump(data, file)
             quit()
 
-        # Cria uma instância da janela
+        def acionar_adicionar(event):
+            adicionar_token()
+
         check = tk.Tk()
 
-        # Define o título da janela
-        check.title("Minha Aplicação Tkinter")
+        check.title(f"Gerador de Links | {os.getlogin()} <> vinicius@echodata")
 
-        # Define as dimensões da janela (largura x altura)
-        check.geometry("400x300")
+        check.geometry("500x250")
 
-        # Cria um rótulo na janela
-        rotulo = tk.Label(check, text="Adicione seu token do ImgBB:")
+        rotulo = tk.Label(check, text="Adicione seu token do ImgBB:", font="Helvetica")
         rotulo.pack()
 
-        # Cria um campo de entrada na janela
         campo_texto = tk.Entry(check)
         campo_texto.pack()
-
-        # Cria um botão na janela
-        botao = tk.Button(check, text="Exibir", command=exibir_texto)
+        
+        botao = tk.Button(check, text="Adicionar", command=adicionar_token)
         botao.pack()
+        
+        campo_texto.bind("<Return>", acionar_adicionar)
+        
+        check.iconbitmap("isotipo_echodata_M5v_icon.ico")
 
-        # Inicia o loop principal da interface gráfica
         check.mainloop()
        
     else:
-        # Configuração da janela principal
         janela = TkinterDnD.Tk()
-        janela.title("Gerador de Links")
+        janela.title(f"Gerador de Links | {os.getlogin()} <> vinicius@echodata")
+        
+        janela.geometry("500x250")
 
-        # Defina as dimensões da janela para 400x300 pixels
-        janela.geometry("400x300")
-
-        # Cria um rótulo na janela
         label = tk.Label(janela, text="Arraste e solte os arquivos na interface", height=200, font="Helvetica")
         label.pack()
 
-        # Cria um rótulo para exibir o nome do arquivo
         label_arquivo = tk.Label(janela, text="")
         label_arquivo.pack()
 
-        # Adicione a funcionalidade de arrastar e soltar
         janela.drop_target_register(DND_FILES)
         janela.dnd_bind('<<Drop>>', handle_drop)
 
-        # Inicia o loop principal da interface gráfica
+        janela.iconbitmap("isotipo_echodata_M5v_icon.ico")
+
         janela.mainloop()
         
         
