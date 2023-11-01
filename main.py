@@ -1,4 +1,5 @@
 import tkinter as tk
+from tkinter import messagebox
 from time import sleep
 import json
 from tkinterdnd2 import DND_FILES, TkinterDnD
@@ -18,6 +19,8 @@ def check_token():
     token = data.get("token")
 
     # TODO: adicionar uma verificacao se o token é valido ou nao, e pedir para inserir novamente
+    # TODO: adicionaru um botao para readicionar o token
+    # TODO: adicionar logs terminal-based, e retorno de interface de usuario conforme os arquivos forem sendo convertidos e upados
     if not data["token"]:
         def adicionar_token():
             token_var = campo_texto.get()
@@ -150,6 +153,7 @@ def upload_images():
         with open(f"converted/{folder}/url_bling.txt", "w+") as txt2:
             txt2.writelines(links_bling)
 
+    messagebox.showinfo("Alerta", "Imagens upadas")
 
 def clear_folder(folder):
     helper = 0
