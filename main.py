@@ -11,6 +11,11 @@ import base64
 import shutil
 import json
 
+root = TkinterDnD.Tk()
+root.title(f"Gerador de Links | {os.getlogin()} <> vinicius@echodata")
+root.geometry("500x250")
+root.iconbitmap("isotipo_echodata_M5v_icon.ico")
+
 def check_token():
     global token
 
@@ -22,58 +27,59 @@ def check_token():
     # TODO: adicionaru um botao para readicionar o token
     # TODO: adicionar logs terminal-based, e retorno de interface de usuario conforme os arquivos forem sendo convertidos e upados
     if not data["token"]:
-        def adicionar_token():
+        def add_token():
             token_var = campo_texto.get()
-            rotulo.config(text=f"Token adicionado!")
-            sleep(2)
-            data["token"] = token_var
+            if len(token_var) < 30:
+                rotulo.config(text=f"Token invalido")
+            else:
+                rotulo.config(text=f"Token adicionado!")
+                sleep(2)
+                data["token"] = token_var
 
-            with open("configs/config.json", "w") as file:
-                json.dump(data, file)
-            quit()
+                with open("configs/config.json", "w") as file:
+                    json.dump(data, file)
+                    
+                rotulo.destroy()
+                campo_texto.destroy()
+                botao.destroy()
+                generator()
 
-        def acionar_adicionar(event):
-            adicionar_token()
+        def trigger_add(event):
+            add_token()
 
-        check = tk.Tk()
-
-        check.title(f"Gerador de Links | {os.getlogin()} <> vinicius@echodata")
-
-        check.geometry("500x250")
-
-        rotulo = tk.Label(check, text="Adicione seu token do ImgBB:", font="Helvetica")
+        # Use a janela principal criada fora da função
+        rotulo = tk.Label(root, text="Adicione seu token do ImgBB:", font="Helvetica")
         rotulo.pack()
 
-        campo_texto = tk.Entry(check)
+        campo_texto = tk.Entry(root)
         campo_texto.pack()
         
-        botao = tk.Button(check, text="Adicionar", command=adicionar_token)
+        botao = tk.Button(root, text="Adicionar", command=add_token)
         botao.pack()
         
-        campo_texto.bind("<Return>", acionar_adicionar)
+        campo_texto.bind("<Return>", trigger_add)
         
-        check.iconbitmap("isotipo_echodata_M5v_icon.ico")
-
-        check.mainloop()
-       
     else:
-        janela = TkinterDnD.Tk()
-        janela.title(f"Gerador de Links | {os.getlogin()} <> vinicius@echodata")
-        
-        janela.geometry("500x250")
+        generator()
 
-        label = tk.Label(janela, text="Arraste e solte os arquivos na interface", height=200, font="Helvetica")
-        label.pack()
+       
+def check_default_folders():
+    try:
+        os.mkdir("converted")
+        print("[+] Folder \"converted\" have been created")
+    except FileExistsError:
+        print("[+] Folder \"converted\" already exists")
+    
+       
+def generator():
+    label = tk.Label(root, text="Arraste e solte os arquivos na interface", height=200, font="Helvetica")
+    label.pack()
 
-        label_arquivo = tk.Label(janela, text="")
-        label_arquivo.pack()
+    label_arquivo = tk.Label(root, text="")
+    label_arquivo.pack()
 
-        janela.drop_target_register(DND_FILES)
-        janela.dnd_bind('<<Drop>>', handle_drop)
-
-        janela.iconbitmap("isotipo_echodata_M5v_icon.ico")
-
-        janela.mainloop()
+    root.drop_target_register(DND_FILES)
+    root.dnd_bind('<<Drop>>', handle_drop)
         
         
 def handle_drop(event):
@@ -86,12 +92,10 @@ def handle_drop(event):
 def convert_images():
     for filename in files:
         file_abs_path = filename
-        filename = filename[3:]
-        
+        filename = filename[3:]        
         if os.path.isdir(file_abs_path):
             os.mkdir(path=f"converted/{filename}")
             for file in os.listdir(file_abs_path):
-                
                 name, ext = os.path.splitext(file)
                 print(name, ext)
                 
@@ -105,6 +109,9 @@ def convert_images():
         if os.path.isfile(file_abs_path):
             filename = os.path.basename(filename)
             name, ext = os.path.splitext(filename)
+            if ext == ".ini":
+                os.remove(file_abs_path)
+                print("[!] Um arquivo .ini destruído com sucesso")
             if ext != ".png":
                 if not os.path.exists("converted/default"):
                     os.mkdir(path=f"converted/default")
@@ -155,41 +162,8 @@ def upload_images():
 
     messagebox.showinfo("Alerta", "Imagens upadas")
 
-def clear_folder(folder):
-    helper = 0
-    for file in os.listdir(folder):
-        file_path = os.path.join(folder, file)
-        if os.path.isdir(file_path):
-            shutil.rmtree(file_path)
-            print(f"[!] Pasta \"{folder}\" resetada")
 
-        if os.path.isfile(file_path):
-            os.remove(file_path)
-            helper += 1
-
-    if helper >= 1:
-        print(f"[!] Pasta \"{folder}\" resetada")
-
-
-def check_desktop_ini():
-    folder = "images"
-    for file in os.listdir(folder):
-        path = os.path.abspath(os.path.join(folder, file))
-        if os.path.isdir(path):
-            for image in os.listdir(path):
-                name, ext = os.path.splitext(image)
-                if ext == ".ini":
-                    file_path = os.path.abspath(os.path.join(path, image))
-                    os.remove(file_path)
-                    print("[!] Um arquivo .ini destruído com sucesso")
-        if os.path.isfile(path):
-            name, ext = os.path.splitext(file)
-            if ext == ".ini":
-                file_path = os.path.abspath(os.path.join(folder, file))
-                os.remove(file_path)
-                print("[!] Um arquivo .ini destruído com sucesso")
-
-
-check_token()
-
-
+if __name__ == "__main__":
+    check_default_folders()
+    check_token()
+    root.mainloop()  # Inicie o loop principal do Tkinter
