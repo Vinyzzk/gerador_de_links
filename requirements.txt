@@ -1,3 +1,4 @@
-tqdm
+tkinterdnd2
 PILLOW
 requests
+pyinstaller
