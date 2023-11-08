@@ -1,4 +1,5 @@
-# Terminal Links Generator
-Python 3.9.12 | Developed to terminal
+Gerador de links
+Python 3.9.12 | GUI Generator
 
-v
+O pyinstaller precisa estar no mesmo venv
+Prompt .exe: pyinstaller --collect-all tkinterdnd2 --hiddenimport=pyinstaller --icon=configs/isotipo_echodata_M5v_icon.ico --onefile main.py
