@@ -10,6 +10,9 @@ import requests
 import base64
 import shutil
 import json
+import pandas as pd
+import openpyxl
+
 
 root = TkinterDnD.Tk()
 root.title(f"Gerador de Links | {os.getlogin()} <> vinicius@echodata")
@@ -92,19 +95,20 @@ def handle_drop(event):
 def convert_images():
     for filename in files:
         file_abs_path = filename
-        filename = filename[3:]        
+        last_folder_name = os.path.basename(os.path.normpath(file_abs_path))
+        print(last_folder_name)
         if os.path.isdir(file_abs_path):
-            os.mkdir(path=f"converted/{filename}")
+            os.mkdir(os.path.join("converted", last_folder_name))
             for file in os.listdir(file_abs_path):
                 name, ext = os.path.splitext(file)
                 print(name, ext)
                 
                 if ext != ".png":
                     img = Image.open(f"{file_abs_path}/{file}").convert("RGB")
-                    img.save(f"converted/{filename}/{name}.jpeg")
+                    img.save(f"converted/{last_folder_name}/{name}.jpeg")
                 else:
                     img = Image.open(f"{file_abs_path}/{file}").convert("RGBA")
-                    img.save(f"converted/{filename}/{name}.png")
+                    img.save(f"converted/{last_folder_name}/{name}.png")
         
         if os.path.isfile(file_abs_path):
             filename = os.path.basename(filename)
@@ -125,10 +129,10 @@ def convert_images():
 
 
 def upload_images():
+    data = []
+
     for folder in os.listdir("converted"):
         links = []
-        links_bling = []
-        links_bling_com_sku = [f"{folder}"]
         links_bling_excel = []
         for img in os.listdir(f"converted/{folder}"):
             name, ext = os.path.splitext(img)
@@ -143,9 +147,7 @@ def upload_images():
                     res = res.json()
                     res = res.get("data")
                     res = res.get("url")
-                    links.append(f"{name}|{res}\n")
-                    links_bling.append(f"{res}")
-                    links_bling_com_sku.append(f"{res}")
+                    links.append(f"{res}\n")
                     links_bling_excel.append(f"{res}")
 
         my_separator = "|"
@@ -159,6 +161,12 @@ def upload_images():
             txt.writelines(links)
         with open(f"converted/{folder}/url_bling.txt", "w+") as txt2:
             txt2.writelines(links_bling)
+
+ 
+        data.append({"SKU": folder, "Links": links_bling_excel})
+
+    df = pd.DataFrame(data)
+    df.to_excel("converted/result.xlsx", index=False, engine="openpyxl")
 
     messagebox.showinfo("Alerta", "Imagens upadas")
 

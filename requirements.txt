@@ -2,3 +2,5 @@ tkinterdnd2
 PILLOW
 requests
 pyinstaller
+pandas
+openpyxl
